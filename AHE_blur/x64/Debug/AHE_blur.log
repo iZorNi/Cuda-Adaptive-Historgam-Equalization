@@ -1,0 +1,71 @@
+﻿Build started 05.05.2015 1:14:20.
+     1>Project "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\AHE_blur.vcxproj" on node 2 (Rebuild target(s)).
+     1>CudaClean:
+         cmd.exe /C "C:\Users\ZorN\AppData\Local\Temp\tmpf90e2e7e32e341c48b5b35098f8766fc.cmd"
+         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile   -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\cudahist.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\cudahist.cu" -clean
+         
+         C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile   -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\cudahist.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\cudahist.cu" -clean 
+         cudahist.cu
+       CudaClean:
+         cmd.exe /C "C:\Users\ZorN\AppData\Local\Temp\tmpa6ba118e2f684bddb58c9e1376855ef2.cmd"
+         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile   -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\kernel.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\kernel.cu" -clean
+         
+         C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile   -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\kernel.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\kernel.cu" -clean 
+         kernel.cu
+       AddCudaCompileDeps:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /DWIN64 /D_DEBUG /D_CONSOLE /D_WINDLL /D_UNICODE /DUNICODE /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /ID:\OpenCV\opencv\build\x64\vc12\..\..\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /I. /FIcuda_runtime.h /c "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\cudahist.cu" 
+       AddCudaCompileDeps:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /DWIN64 /D_DEBUG /D_CONSOLE /D_WINDLL /D_UNICODE /DUNICODE /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /ID:\OpenCV\opencv\build\x64\vc12\..\..\include /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /I. /FIcuda_runtime.h /c "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\kernel.cu" 
+       CudaBuild:
+         Compiling CUDA source file cudahist.cu...
+         cmd.exe /C "C:\Users\ZorN\AppData\Local\Temp\tmpce368fbbe2d444069f079cc78f9d24c9.cmd"
+         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\cudahist.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\cudahist.cu"
+         
+         C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\cudahist.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\cudahist.cu" 
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(955): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvForestTree"
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(1143): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvBoostTree"
+     1>D:\OpenCV\opencv\build\include\opencv2/core/affine.hpp(280): warning : controlling expression is constant
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(955): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvForestTree"
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(1143): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvBoostTree"
+         cudahist.cu
+       CudaBuild:
+         Compiling CUDA source file kernel.cu...
+         cmd.exe /C "C:\Users\ZorN\AppData\Local\Temp\tmpba4daa427383426d9edff3864f1c19d4.cmd"
+         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\kernel.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\kernel.cu"
+         
+         C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" -ID:\OpenCV\opencv\build\x64\vc12\..\..\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_WINDLL -D_UNICODE -DUNICODE -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o x64\Debug\kernel.cu.obj "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\kernel.cu" 
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(955): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvForestTree"
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(1143): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvBoostTree"
+     1>D:\OpenCV\opencv\build\include\opencv2/core/affine.hpp(280): warning : controlling expression is constant
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(955): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvForestTree"
+     1>D:\OpenCV\opencv\build\include\opencv2/ml/ml.hpp(1143): warning : overloaded virtual function "CvDTree::train" is only partially overridden in class "CvBoostTree"
+         kernel.cu
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\include" /ID:\OpenCV\opencv\build\x64\vc12\..\..\include /Zi /nologo /W3 /WX- /Od /D WIN32 /D WIN64 /D _DEBUG /D _CONSOLE /D _WINDLL /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt AheFilter.cpp DataHandler.cpp Program.cpp Utilities.cpp
+         Utilities.cpp
+         Program.cpp
+         DataHandler.cpp
+         AheFilter.cpp
+     1>AheFilter.cpp(150): warning C4244: '=' : conversion from 'float' to 'int', possible loss of data
+         Generating Code...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\x64\Debug\AHE_blur.dll" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\lib\x64" /LIBPATH:D:\OpenCV\opencv\build\x64\vc12\lib cudart.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opencv_highgui2410.lib opencv_gpu2410.lib opencv_core2410.lib opencv_imgproc2410.lib opencv_photo2410.lib opencv_features2d2410.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\x64\Debug\AHE_blur.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\x64\Debug\AHE_blur.lib" /MACHINE:X64 /DLL x64\Debug\cudahist.cu.obj
+         x64\Debug\kernel.cu.obj
+         x64\Debug\AheFilter.obj
+         x64\Debug\DataHandler.obj
+         x64\Debug\Program.obj
+         x64\Debug\Utilities.obj
+         AHE_blur.vcxproj -> C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\x64\Debug\AHE_blur.dll
+       PostBuildEvent:
+         echo copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\cudart*.dll" "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\x64\Debug\"
+         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\cudart*.dll" "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\x64\Debug\"
+         :VCEnd
+         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\cudart*.dll" "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\x64\Debug\"
+         C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\cudart32_65.dll
+         C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.5\bin\cudart64_65.dll
+         Скопировано файлов:         2.
+     1>Done Building Project "C:\Users\ZorN\Documents\Visual Studio 2013\Projects\AHE_blur\AHE_blur\AHE_blur.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:24.26
