@@ -4,6 +4,20 @@
 
 AheFilter::AheFilter()
 {
+	dev_image.width = 0;
+	dev_image.height = 0;
+	dev_image.hue = NULL;
+	dev_image.saturation = NULL;
+	dev_image.value = NULL;
+	dev_image.valueBlurred = NULL;
+	dev_image.valueContrast = NULL;
+	dev_image.filter = NULL;
+	dev_image.inputImage = NULL;
+	dev_image.outputImage = NULL;
+	dev_image.filterWidth = 0;
+	createGaussianFilter();
+	isMemoryAllocated = 0;
+	isImageSizeChanged = 0;
 }
 
 
@@ -13,9 +27,8 @@ AheFilter::~AheFilter()
 
 int AheFilter::runAHE(uchar* input, uchar* output, int rows, int cols)
 {
-	DataHandler::prepareInputImage(input, rows, cols, inputImage);
-
-	createGaussianFilter();
+	DataHandler::prepareImage(input, rows, cols, inputImage);
+	DataHandler::prepareImage(output, rows, cols, outputImage);
 	prepareDeviceMemory();
 	RunAHEKernel(dev_image.outputImage,
 				dev_image.inputImage,
@@ -29,6 +42,57 @@ int AheFilter::runAHE(uchar* input, uchar* output, int rows, int cols)
 				dev_image.filterWidth,
 				dev_image.height,
 				dev_image.width);
+	
+	
+	//FILE *file;
+	//char* fname = "value.txt";
+	//file = fopen(fname, "w");
+	//size_t size = rows*cols*sizeof(uchar);
+	//uchar* value = (uchar*)malloc(size);
+	//cudaMemcpy(value, dev_image.value, size, cudaMemcpyDeviceToHost);
+	//cudaDeviceSynchronize();
+	//for (int i = 0; i < rows; i++)
+	//{
+	//	for (int j = 0; j < cols; j++)
+	//	{
+	//		fprintf(file, "%d ", value[i*cols + j]);
+	//	}
+	//	fprintf(file, "\n");
+	//}
+	//fclose(file);
+	//
+	//size = rows*cols*sizeof(int);
+	//fname = "hue.txt";
+	//file = freopen(fname, "w", file);
+	//int* hue = (int*)malloc(size);
+	//cudaMemcpy(hue, dev_image.hue, size, cudaMemcpyDeviceToHost);
+	//cudaDeviceSynchronize();
+	//for (int i = 0; i < rows; i++)
+	//{
+	//	for (int j = 0; j < cols; j++)
+	//	{
+	//		fprintf(file, "%d ", hue[i*cols + j]);
+	//	}
+	//	fprintf(file, "\n");
+	//}
+	//fclose(file);
+
+	//size = rows*cols*sizeof(float);
+	//fname = "saturation.txt";
+	//file = freopen(fname, "w", file);
+	//float* saturation = (float*)malloc(size);
+	//cudaMemcpy(saturation, dev_image.saturation, size, cudaMemcpyDeviceToHost);
+	//cudaDeviceSynchronize();
+	//for (int i = 0; i < rows; i++)
+	//{
+	//	for (int j = 0; j < cols; j++)
+	//	{
+	//		fprintf(file, "%f ", saturation[i*cols + j]);
+	//	}
+	//	fprintf(file, "\n");
+	//}
+	//fclose(file);
+
 	copyResultToHost();
 	releaseDeviceMemory();
 	return 0;
@@ -36,52 +100,79 @@ int AheFilter::runAHE(uchar* input, uchar* output, int rows, int cols)
 
 void AheFilter::prepareDeviceMemory()
 {
-	size_t size = dev_image.width * dev_image.height * sizeof(float);
-	Utilities::getError(cudaMalloc(&dev_image.hue, size));
-	Utilities::getError(cudaMemset(dev_image.hue, 0, size));
+	if ((inputImage.rows != dev_image.height) || (inputImage.cols != dev_image.width))
+	{ 
+		isImageSizeChanged = 1;
+	}
+	if (isImageSizeChanged || !isMemoryAllocated)
+	{
+		if (isImageSizeChanged)
+		{
+			releaseDeviceMemory();
+		}
+		if (!isMemoryAllocated)
+		{
+			allocateDeviceMemory();
+			initDevImage();
+			initGaussianFilterDev();
+		}
+	}
+	else
+	{
+		initDevImage();
+	}
 	
-	Utilities::getError(cudaMalloc(&dev_image.saturation, size));
-	Utilities::getError(cudaMemset(dev_image.saturation, 0, size));
-	
-	size = dev_image.width * dev_image.height * sizeof(unsigned char);
+}
 
-	Utilities::getError(cudaMalloc(&dev_image.value, size));
+void AheFilter::allocateDeviceMemory()
+{
+	size_t size = inputImage.cols * inputImage.rows * sizeof(float);
+
+	Utilities::getError(cudaMalloc((void**)&dev_image.saturation, size));
+	Utilities::getError(cudaMemset(dev_image.saturation, 0, size));
+
+	size = inputImage.cols * inputImage.rows * sizeof(int);
+
+	Utilities::getError(cudaMalloc((void**)&dev_image.hue, size));
+	Utilities::getError(cudaMemset(dev_image.hue, 0, size));
+
+	size = inputImage.cols * inputImage.rows * sizeof(unsigned char);
+
+	Utilities::getError(cudaMalloc((void**)&dev_image.value, size));
+	Utilities::getError(cudaMalloc((void**)&dev_image.valueBlurred, size));
+	Utilities::getError(cudaMalloc((void**)&dev_image.valueContrast, size));
+	Utilities::getError(cudaMalloc((void**)&dev_image.mask, size));
+
 	Utilities::getError(cudaMemset(dev_image.value, 0, size));
-	
-	Utilities::getError(cudaMalloc(&dev_image.valueBlurred, size));
 	Utilities::getError(cudaMemset(dev_image.valueBlurred, 0, size));
-	
-	Utilities::getError(cudaMalloc(&dev_image.valueContrast, size));
 	Utilities::getError(cudaMemset(dev_image.valueContrast, 0, size));
-	
-	Utilities::getError(cudaMalloc(&dev_image.mask, size));
 	Utilities::getError(cudaMemset(dev_image.mask, 0, size));
 
 	size = inputImage.cols * inputImage.rows * 3 * sizeof(unsigned char);
-	Utilities::getError(cudaMalloc(&dev_image.inputImage, size));
+
+	Utilities::getError(cudaMalloc((void**)&dev_image.inputImage, size));
 	Utilities::getError(cudaHostRegister(inputImage.data, size, 0));
-	Utilities::getError(cudaMemcpy(dev_image.inputImage, inputImage.data, size, cudaMemcpyHostToDevice));
-	
-	Utilities::getError(cudaMalloc(&dev_image.outputImage, size));
+
+	Utilities::getError(cudaMalloc((void**)&dev_image.outputImage, size));
 	Utilities::getError(cudaHostRegister(outputImage.data, size, 0));
-	Utilities::getError(cudaMemcpy(dev_image.outputImage, inputImage.data, size, cudaMemcpyHostToDevice));
-	
-	size = filter.weight.size() * sizeof(float);
-	Utilities::getError(cudaMalloc(&dev_image.filter, size));
-	Utilities::getError(cudaMemcpy(dev_image.filter, &filter.weight[0], size, cudaMemcpyHostToDevice));
-	dev_image.filterWidth = filter.width;
+
+	isMemoryAllocated = 1;
 }
 
 void AheFilter::releaseDeviceMemory()
 {
-	Utilities::getError(cudaFree(&dev_image.hue));
-	Utilities::getError(cudaFree(&dev_image.saturation));
-	Utilities::getError(cudaFree(&dev_image.value));
-	Utilities::getError(cudaFree(&dev_image.valueBlurred));
-	Utilities::getError(cudaFree(&dev_image.valueContrast));
-	Utilities::getError(cudaFree(&dev_image.mask));
-	Utilities::getError(cudaFree(&dev_image.inputImage));
-	Utilities::getError(cudaFree(&dev_image.outputImage));
+	if (isMemoryAllocated)
+	{
+		Utilities::getError(cudaFree(dev_image.hue));
+		Utilities::getError(cudaFree(dev_image.saturation));
+		Utilities::getError(cudaFree(dev_image.value));
+		Utilities::getError(cudaFree(dev_image.valueBlurred));
+		Utilities::getError(cudaFree(dev_image.valueContrast));
+		Utilities::getError(cudaFree(dev_image.mask));
+		Utilities::getError(cudaFree(dev_image.inputImage));
+		Utilities::getError(cudaFree(dev_image.outputImage));
+		isMemoryAllocated = 0;
+	}
 }
 
 void AheFilter::copyResultToHost()
@@ -129,6 +220,27 @@ void AheFilter::createGaussianFilter()
 			filter.weight[idx] *= normal;
 		}
 	}
+}
+
+void AheFilter::initDevImage()
+{
+	dev_image.width = inputImage.cols;
+	dev_image.height = inputImage.rows;
+
+
+	size_t size = inputImage.cols * inputImage.rows * 3 * sizeof(unsigned char);
+	Utilities::getError(cudaMemcpy(dev_image.inputImage, inputImage.data, size, cudaMemcpyHostToDevice));
+	Utilities::getError(cudaMemset(dev_image.outputImage, 0, size));
+	//Utilities::getError(cudaMemcpy(dev_image.outputImage, inputImage.data, size, cudaMemcpyHostToDevice));
+
+}
+
+void AheFilter::initGaussianFilterDev()
+{
+	size_t size = filter.weight.size() * sizeof(float);
+	Utilities::getError(cudaMalloc(&dev_image.filter, size));
+	Utilities::getError(cudaMemcpy(dev_image.filter, &filter.weight[0], size, cudaMemcpyHostToDevice));
+	dev_image.filterWidth = filter.width;
 }
 
 void AheFilter::equalizeHistogram(uchar* value, int rows, int cols)
