@@ -43,55 +43,6 @@ int AheFilter::runAHE(uchar* input, uchar* output, int rows, int cols)
 				dev_image.height,
 				dev_image.width);
 	
-	
-	//FILE *file;
-	//char* fname = "value.txt";
-	//file = fopen(fname, "w");
-	//size_t size = rows*cols*sizeof(uchar);
-	//uchar* value = (uchar*)malloc(size);
-	//cudaMemcpy(value, dev_image.value, size, cudaMemcpyDeviceToHost);
-	//cudaDeviceSynchronize();
-	//for (int i = 0; i < rows; i++)
-	//{
-	//	for (int j = 0; j < cols; j++)
-	//	{
-	//		fprintf(file, "%d ", value[i*cols + j]);
-	//	}
-	//	fprintf(file, "\n");
-	//}
-	//fclose(file);
-	//
-	//size = rows*cols*sizeof(int);
-	//fname = "hue.txt";
-	//file = freopen(fname, "w", file);
-	//int* hue = (int*)malloc(size);
-	//cudaMemcpy(hue, dev_image.hue, size, cudaMemcpyDeviceToHost);
-	//cudaDeviceSynchronize();
-	//for (int i = 0; i < rows; i++)
-	//{
-	//	for (int j = 0; j < cols; j++)
-	//	{
-	//		fprintf(file, "%d ", hue[i*cols + j]);
-	//	}
-	//	fprintf(file, "\n");
-	//}
-	//fclose(file);
-
-	//size = rows*cols*sizeof(float);
-	//fname = "saturation.txt";
-	//file = freopen(fname, "w", file);
-	//float* saturation = (float*)malloc(size);
-	//cudaMemcpy(saturation, dev_image.saturation, size, cudaMemcpyDeviceToHost);
-	//cudaDeviceSynchronize();
-	//for (int i = 0; i < rows; i++)
-	//{
-	//	for (int j = 0; j < cols; j++)
-	//	{
-	//		fprintf(file, "%f ", saturation[i*cols + j]);
-	//	}
-	//	fprintf(file, "\n");
-	//}
-	//fclose(file);
 
 	copyResultToHost();
 	releaseDeviceMemory();
