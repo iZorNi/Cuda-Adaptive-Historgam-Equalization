@@ -42,7 +42,7 @@ void mask_overlay(
 __global__
 void convert_to_hsv(
 const uchar*		image,
-float*				hue,
+int*				hue,
 float*				saturation,
 uchar*				value,
 int					rows,
@@ -51,14 +51,14 @@ int					cols);
 __global__
 void convert_to_rgb(
 uchar*				image,
-float*				hue,
+int*				hue,
 float*				saturation,
 uchar*				value,
 int					rows,
 int					cols);
 
 __global__
-void convert_to_uchar(const uchar* const input, uint* const output, int rows, int cols);
+void convert_to_uint(const uchar* const input, uint* const output, int rows, int cols);
 
 __global__
 void generate_LUT(uint* const lut, const uint* const cdf, int levels, int nPixels);
@@ -90,7 +90,7 @@ void generateLUT(uint* const lut,
 extern "C" void RunAHEKernel(
 	uchar* const			outputImage,					// Return value: rgba image 
 	const uchar* const		originalImage,
-	float* const			hue,	
+	int* const				hue,	
 	float* const			saturation,
 	uchar* const			value,
 	uchar* const			valueBlurred,
@@ -112,47 +112,52 @@ extern "C" void RunAHEKernel(
 	int x = static_cast<int>(ceilf(static_cast<float>(cols) / BLOCK_WIDTH));
 	int y = static_cast<int>(ceilf(static_cast<float>(rows) / BLOCK_WIDTH));
 
-	//const dim3 grid(x, y, 1);								// number of blocks
-	//const dim3 block(BLOCK_WIDTH, BLOCK_WIDTH, 1);			// block width: number of threads per block
+	const dim3 grid(x, y, 1);								// number of blocks
+	const dim3 block(BLOCK_WIDTH, BLOCK_WIDTH, 1);			// block width: number of threads per block
 
-	const int grid = x*y;							// number of blocks
-	const int block = BLOCK_WIDTH*BLOCK_WIDTH;		// block width: number of threads per block
+	//const int grid = x*y;							// number of blocks
+	//const int block = BLOCK_WIDTH*BLOCK_WIDTH;		// block width: number of threads per block
 
 	// Convert RGB to HSV
 	convert_to_hsv <<< grid, block >>>(originalImage, hue, saturation, value, rows, cols);
-	hr = cudaDeviceSynchronize();																
-	CHECK_CUDA_ERROR(hr, func, "conver_to_hsv kernel failed.");
+	Utilities::getError(cudaDeviceSynchronize());
+	//CHECK_CUDA_ERROR(hr, func, "convert_to_hsv kernel failed.");
 
 	// Call convolution kernel for channel
 	gaussian_blur <<< grid, block >>>(valueBlurred, value, rows, cols, filterWeight, filterWidth);
-	hr = cudaDeviceSynchronize();																
-	CHECK_CUDA_ERROR(hr, func, "gaussian_blur kernel failed ");
+	Utilities::getError(cudaDeviceSynchronize());																
+	//CHECK_CUDA_ERROR(hr, func, "gaussian_blur kernel failed ");
 
 	// Create mask of local contrast
 	create_mask <<< grid, block >>>(value, valueBlurred, mask, rows, cols);
-	hr = cudaDeviceSynchronize();																
-	CHECK_CUDA_ERROR(hr, func, "create mask kernel failed ");
-	
+	Utilities::getError(cudaDeviceSynchronize());
+	//hr = cudaDeviceSynchronize();																
+	//CHECK_CUDA_ERROR(hr, func, "create mask kernel failed ");
+
 	// Equalize image histogram
 	histogramEqualization(value, valueContrast, rows, cols);
 
 	// Overlay mask of local contrast
-	mask_overlay << < grid, block >> >(value, valueBlurred, mask, rows, cols);
-	hr = cudaDeviceSynchronize();																
-	CHECK_CUDA_ERROR(hr, func, "mask_overlay kernel failed ");
+	mask_overlay << < grid, block >> >(value, valueContrast, mask, rows, cols);
+	Utilities::getError(cudaDeviceSynchronize());
 
+	//hr = cudaDeviceSynchronize();																
+	//CHECK_CUDA_ERROR(hr, func, "mask_overlay kernel failed ");
+	
+	//Utilities::getError(cudaMemcpy(value, valueContrast, rows*cols*sizeof(uchar), cudaMemcpyDeviceToDevice));
+	//Utilities::getError(cudaDeviceSynchronize());
 	// Recombine HSV channels into an RGB image
 	convert_to_rgb <<< grid, block >>>(outputImage, hue, saturation, value, rows, cols);
-	hr = cudaDeviceSynchronize();																
-	CHECK_CUDA_ERROR(hr, func, "convert_to_rgb kernel failed.");
-
+	Utilities::getError(cudaDeviceSynchronize());
+	//hr = cudaDeviceSynchronize();																
+	//CHECK_CUDA_ERROR(hr, func, "convert_to_rgb kernel failed.");
 }
 
 
 __global__
 void gaussian_blur(
-	uchar* const		blurredChannel,						// return value: blurred channel
-	const uchar* const	inputChannel,						// channel from the original image
+	uchar* const				blurredChannel,						// return value: blurred channel
+	const uchar* const			inputChannel,						// channel from the original image
 	int							rows,
 	int							cols,
 	const float* const			filterWeight,						// gaussian filter weights. The weights look like a bell shape.
@@ -239,7 +244,7 @@ void mask_overlay(
 __global__
 void convert_to_rgb(
 uchar*				image,
-float*				hue,
+int*				hue,
 float*				saturation,
 uchar*				value,
 int					rows,
@@ -255,11 +260,11 @@ int					cols)
 
 	int idx = y + cols * x;		// current pixel index
 
-	float r, g, b;
+	int r, g, b;
 	//copy values to local variables
 	int v = value[idx];
 	float s = saturation[idx];
-	int h = static_cast<int>(hue[idx]);
+	int h = hue[idx];
 
 	int vmin = lrintf((1 - s) * v);
 	int a = lrintf((v - vmin)*((h % 60) / 60.f));
@@ -310,7 +315,7 @@ int					cols)
 __global__
 void convert_to_hsv(
 const uchar*		image,
-float*				hue,
+int*				hue,
 float*				saturation,
 uchar*				value,
 int					rows,
@@ -362,7 +367,7 @@ int					cols)
 	}
 
 	value[idx] = max;
-	saturation[idx] = (max == 0) ? 0.f : 1.f - min / ((double)max);
+	saturation[idx] = (max == 0) ? 0.f : 1.f - ((double)min) / ((double)max);
 	if (max == min)
 	{
 		hue[idx] = 0;
@@ -408,8 +413,12 @@ void histogramEqualization(
 	int x = static_cast<int>(ceilf(static_cast<float>(cols) / BLOCK_WIDTH));
 	int y = static_cast<int>(ceilf(static_cast<float>(rows) / BLOCK_WIDTH));
 
-	int grid = x*y;							// number of blocks
-	int block = BLOCK_WIDTH*BLOCK_WIDTH;		// block width: number of threads per block
+
+	const dim3 grid(x, y, 1);								// number of blocks
+	const dim3 block(BLOCK_WIDTH, BLOCK_WIDTH, 1);			// block width: number of threads per block
+
+	//int grid = x*y;							// number of blocks
+	//int block = BLOCK_WIDTH*BLOCK_WIDTH;		// block width: number of threads per block
 	
 	uint* d_Data;
 	uint* d_Histogram;
@@ -420,7 +429,7 @@ void histogramEqualization(
 	Utilities::getError(cudaMalloc((void **)&d_Data, rows*cols * sizeof(uint)));
 
 
-	convert_to_uchar <<<grid,block>>> (inputChannel, d_Data, rows, cols);
+	convert_to_uint <<<grid,block>>> (inputChannel, d_Data, rows, cols);
 	hr = cudaDeviceSynchronize();
 	CHECK_CUDA_ERROR(hr, func, "convert_to_uchar kernel failed.");
 
@@ -468,23 +477,36 @@ void generateLUT(uint* const lut,
 	const char* func = "generateLUT";
 
 	cudaError hr = cudaSuccess;
-
-	cdf[0] = hist[0];
-	lut[0] = 0;
+	size_t size = HISTOGRAM_BIN_COUNT*sizeof(uint);
+	uint* h_cdf = (uint*)malloc(size);
+	uint* h_hist = (uint*)malloc(size);
+	
+	Utilities::getError(cudaMemcpy(h_hist, hist, size, cudaMemcpyDeviceToHost));
+	Utilities::getError(cudaDeviceSynchronize());
+	
+	h_cdf[0] = h_hist[0];
+	//lut[0] = 0;
 	for (int i = 1; i < HISTOGRAM_BIN_COUNT; i++)
 	{
-		cdf[i] = cdf[i - 1] + hist[i];
+		h_cdf[i] = h_cdf[i - 1] + h_hist[i];
 	}
+	
+	Utilities::getError(cudaMemcpy(cdf, h_cdf, size, cudaMemcpyHostToDevice));
+
 	int block = 32;
 	int grid = ((HISTOGRAM_BIN_COUNT-1) / block + 1);
-
+	
 	generate_LUT << <grid, block >> >(lut, cdf, HISTOGRAM_BIN_COUNT, nPixels);
-	hr = cudaDeviceSynchronize();
-	CHECK_CUDA_ERROR(hr, func, "generate_LUT kernel failed.");
+	Utilities::getError(cudaDeviceSynchronize());
+	//hr = cudaDeviceSynchronize();
+	//CHECK_CUDA_ERROR(hr, func, "generate_LUT kernel failed.");
+	
+	free(h_cdf);
+	free(h_hist);
 }
 
 __global__
-void convert_to_uchar(const uchar* const input, uint* const output, int rows, int cols)
+void convert_to_uint(const uchar* const input, uint* const output, int rows, int cols)
 {
 	int x = blockIdx.y * blockDim.y + threadIdx.y;		// current row
 	int y = blockIdx.x * blockDim.x + threadIdx.x;		// current column
