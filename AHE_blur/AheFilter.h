@@ -15,6 +15,7 @@ private:
 	HostImage inputImage, outputImage;
 	DeviceImage dev_image;
 	GaussianFilter filter;
+	int isMemoryAllocated = 0, isImageSizeChanged;
 private:
 	void createGaussianFilter();
 	void prepareDeviceMemory();
@@ -22,5 +23,8 @@ private:
 	void equalizeHistogram(uchar* value, int height, int width);
 	void releaseDeviceMemory();
 	void copyResultToHost();
+	void initDevImage();
+	void allocateDeviceMemory();
+	void initGaussianFilterDev();
 };
 
