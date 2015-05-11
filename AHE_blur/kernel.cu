@@ -142,6 +142,17 @@ extern "C" void RunAHEKernel(
 	//Utilities::getError(cudaMemcpy(value, mask, rows*cols*sizeof(uchar), cudaMemcpyDeviceToDevice));
 	//Utilities::getError(cudaDeviceSynchronize());
 	
+	FILE* file;
+	char* fname = "valuecont.txt";
+	file = fopen(fname, "w");
+	size_t size = rows*cols*sizeof(uchar);
+	uchar* vf = (uchar*)malloc(size);
+	cudaMemcpy(vf, value, size, cudaMemcpyDeviceToHost);
+	for (int i = 0; i < rows*cols; i++)
+	{
+		fprintf(file, "%d ", vf[i]);
+	}
+	fclose(file);
 	
 	// Recombine HSV channels into an RGB image
 	convert_to_rgb <<< grid, block >>>(outputImage, hue, saturation, value, rows, cols);
@@ -427,8 +438,8 @@ void histogramEqualization(
 	//calculateHistogram(d_Data, d_Histogram, rows, cols);
 	//Utilities::getError(cudaFree(d_Data));
 
-	//Utilities::getError(cudaMalloc((void**)&d_lut, HISTOGRAM_BIN_COUNT * sizeof(uint)));
-	//Utilities::getError(cudaMalloc((void**)&cdf, HISTOGRAM_BIN_COUNT * sizeof(uint)));
+	Utilities::getError(cudaMalloc((void**)&d_lut, HISTOGRAM_BIN_COUNT * sizeof(uint)));
+	Utilities::getError(cudaMalloc((void**)&cdf, HISTOGRAM_BIN_COUNT * sizeof(uint)));
 
 	//generateLUT(d_lut, d_Histogram, cdf, HISTOGRAM_BIN_COUNT, rows*cols);
 	//Utilities::getError(cudaDeviceSynchronize());
