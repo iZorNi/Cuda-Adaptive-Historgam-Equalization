@@ -23,6 +23,7 @@ AheFilter::AheFilter()
 
 AheFilter::~AheFilter()
 {
+	filter.weight.clear();
 }
 
 int AheFilter::runAHE(uchar* input, uchar* output, int rows, int cols)
