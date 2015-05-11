@@ -80,12 +80,17 @@ void histogramEqualization(
 void calculateHistogram(uint* const input, uint* const d_Histogram, int rows, int cols);
 
 //generates LUT to equlize image
+void generateLUTCpu(uint* const lut,
+	const int* const hist,
+	uint* const cdf,
+	int levels, int nPixels);
+
 void generateLUT(uint* const lut,
 	const uint* const hist,
 	uint* const cdf,
 	int levels, int nPixels);
 
-
+void calculateHistogramCPU(const uchar* const input, int* const histogram, int rows, int cols);
 
 extern "C" void RunAHEKernel(
 	uchar* const			outputImage,					// Return value: rgba image 
@@ -102,9 +107,6 @@ extern "C" void RunAHEKernel(
 	int						cols							// image size: number of columns
 	)
 {
-	const char* func = "RunAHEKernel";
-
-	cudaError hr = cudaSuccess;
 
 	static const int BLOCK_WIDTH = 32;						// threads per block; because we are setting 2-dimensional block, the total number of threads is 32^2, or 1024
 															// 1024 is the maximum number of threads per block for modern GPUs.
@@ -121,18 +123,14 @@ extern "C" void RunAHEKernel(
 	// Convert RGB to HSV
 	convert_to_hsv <<< grid, block >>>(originalImage, hue, saturation, value, rows, cols);
 	Utilities::getError(cudaDeviceSynchronize());
-	//CHECK_CUDA_ERROR(hr, func, "convert_to_hsv kernel failed.");
 
 	// Call convolution kernel for channel
-	gaussian_blur <<< grid, block >>>(valueBlurred, value, rows, cols, filterWeight, filterWidth);
-	Utilities::getError(cudaDeviceSynchronize());																
-	//CHECK_CUDA_ERROR(hr, func, "gaussian_blur kernel failed ");
+	gaussian_blur << < grid, block >> >(valueBlurred, value, rows, cols, filterWeight, filterWidth);
+	Utilities::getError(cudaDeviceSynchronize());
 
 	// Create mask of local contrast
 	create_mask <<< grid, block >>>(value, valueBlurred, mask, rows, cols);
 	Utilities::getError(cudaDeviceSynchronize());
-	//hr = cudaDeviceSynchronize();																
-	//CHECK_CUDA_ERROR(hr, func, "create mask kernel failed ");
 
 	// Equalize image histogram
 	histogramEqualization(value, valueContrast, rows, cols);
@@ -140,17 +138,15 @@ extern "C" void RunAHEKernel(
 	// Overlay mask of local contrast
 	mask_overlay << < grid, block >> >(value, valueContrast, mask, rows, cols);
 	Utilities::getError(cudaDeviceSynchronize());
-
-	//hr = cudaDeviceSynchronize();																
-	//CHECK_CUDA_ERROR(hr, func, "mask_overlay kernel failed ");
 	
-	//Utilities::getError(cudaMemcpy(value, valueContrast, rows*cols*sizeof(uchar), cudaMemcpyDeviceToDevice));
+	//Utilities::getError(cudaMemcpy(value, mask, rows*cols*sizeof(uchar), cudaMemcpyDeviceToDevice));
 	//Utilities::getError(cudaDeviceSynchronize());
+	
+	
 	// Recombine HSV channels into an RGB image
 	convert_to_rgb <<< grid, block >>>(outputImage, hue, saturation, value, rows, cols);
 	Utilities::getError(cudaDeviceSynchronize());
-	//hr = cudaDeviceSynchronize();																
-	//CHECK_CUDA_ERROR(hr, func, "convert_to_rgb kernel failed.");
+
 }
 
 
@@ -238,7 +234,8 @@ void mask_overlay(
 	}
 
 	int idx = y + cols * x;		// current pixel index
-	inputChannel[idx] = static_cast<uchar> ((1 - mask[idx] / 255.f)*contrastChannel[idx] + mask[idx] / 255.f * inputChannel[idx]);
+	float coef = (float)mask[idx] / 255.f;
+	inputChannel[idx] = static_cast<uchar> ( lrintf( coef * contrastChannel[idx] + (1.f - coef) * inputChannel[idx]));
 }
 
 __global__
@@ -403,12 +400,9 @@ void histogramEqualization(
 	int						rows,
 	int						cols)
 {
-	const char* func = "histogramEqualization";
-
-	cudaError hr = cudaSuccess;
 
 	static const int BLOCK_WIDTH = 32;		// threads per block; because we are setting 2-dimensional block, the total number of threads is 32^2, or 1024
-	// 1024 is the maximum number of threads per block for modern GPUs.
+											// 1024 is the maximum number of threads per block for modern GPUs.
 
 	int x = static_cast<int>(ceilf(static_cast<float>(cols) / BLOCK_WIDTH));
 	int y = static_cast<int>(ceilf(static_cast<float>(rows) / BLOCK_WIDTH));
@@ -416,39 +410,57 @@ void histogramEqualization(
 
 	const dim3 grid(x, y, 1);								// number of blocks
 	const dim3 block(BLOCK_WIDTH, BLOCK_WIDTH, 1);			// block width: number of threads per block
-
-	//int grid = x*y;							// number of blocks
-	//int block = BLOCK_WIDTH*BLOCK_WIDTH;		// block width: number of threads per block
 	
 	uint* d_Data;
 	uint* d_Histogram;
 	uint* d_lut;
 	uint* cdf;
-
-	Utilities::getError(cudaMalloc((void **)&d_Histogram, HISTOGRAM_BIN_COUNT * sizeof(uint)));
-	Utilities::getError(cudaMalloc((void **)&d_Data, rows*cols * sizeof(uint)));
-
-
-	convert_to_uint <<<grid,block>>> (inputChannel, d_Data, rows, cols);
-	hr = cudaDeviceSynchronize();
-	CHECK_CUDA_ERROR(hr, func, "convert_to_uchar kernel failed.");
-
-	calculateHistogram(d_Data, d_Histogram, rows, cols);
-	Utilities::getError(cudaFree(d_Data));
-
-	Utilities::getError(cudaMalloc((void**)&d_lut, HISTOGRAM_BIN_COUNT * sizeof(uint)));
-	Utilities::getError(cudaMalloc((void**)&cdf, HISTOGRAM_BIN_COUNT * sizeof(uint)));
-
-	generateLUT(d_lut, d_Histogram, cdf, HISTOGRAM_BIN_COUNT, rows*cols);
-	hr = cudaDeviceSynchronize();
-	CHECK_CUDA_ERROR(hr, func, "convert_to_uchar kernel failed.");
 	
-	Utilities::getError(cudaFree(d_Histogram));
+	size_t size = HISTOGRAM_BIN_COUNT*sizeof(uint);
+
+	//Utilities::getError(cudaMalloc((void **)&d_Data, rows*cols * sizeof(uint)));
+	//convert_to_uint << <grid, block >> > (inputChannel, d_Data, rows, cols);
+	//Utilities::getError(cudaDeviceSynchronize());
+
+	//Utilities::getError(cudaMalloc((void **)&d_Histogram, HISTOGRAM_BIN_COUNT * sizeof(uint)));
+	//Utilities::getError(cudaMemset(d_Histogram, 0, HISTOGRAM_BIN_COUNT * sizeof(uint)));
+	//calculateHistogram(d_Data, d_Histogram, rows, cols);
+	//Utilities::getError(cudaFree(d_Data));
+
+	//Utilities::getError(cudaMalloc((void**)&d_lut, HISTOGRAM_BIN_COUNT * sizeof(uint)));
+	//Utilities::getError(cudaMalloc((void**)&cdf, HISTOGRAM_BIN_COUNT * sizeof(uint)));
+
+	//generateLUT(d_lut, d_Histogram, cdf, HISTOGRAM_BIN_COUNT, rows*cols);
+	//Utilities::getError(cudaDeviceSynchronize());
+
+	int* hist = (int*)malloc(size);
+	size = rows*cols*sizeof(uchar);
+	uchar* data = (uchar*)malloc(size);
+	cudaMemcpy(data, inputChannel, size, cudaMemcpyDeviceToHost);
+	cudaDeviceSynchronize();
+	calculateHistogramCPU(data, hist, rows, cols);
+	generateLUTCpu(d_lut, hist, cdf, HISTOGRAM_BIN_COUNT, rows*cols);
+
+	//FILE* file;
+	//char* fname = "histogram.txt";
+	//file = fopen(fname, "w");
+	//size = HISTOGRAM_BIN_COUNT*sizeof(uint);
+	//uint* hist = (uint*)malloc(size);
+	//uint* lut = (uint*)malloc(size);
+	//cudaMemcpy(hist, d_Histogram, size, cudaMemcpyDeviceToHost);
+	//cudaMemcpy(lut, d_lut, size, cudaMemcpyDeviceToHost);
+	//cudaDeviceSynchronize();
+	//for (int i = 0; i < HISTOGRAM_BIN_COUNT; i++)
+	//{
+	//	fprintf(file, "%d %d %d\n", i, hist[i], lut[i]);
+	//}
+	//fclose(file);
+
+	//Utilities::getError(cudaFree(d_Histogram));
 	Utilities::getError(cudaFree(cdf));
 
 	equalize_channel << <grid, block >> > (inputChannel, outputChannel, d_lut, rows, cols);
-	hr = cudaDeviceSynchronize();
-	CHECK_CUDA_ERROR(hr, func, "equalize_channel kernel failed.");
+	Utilities::getError(cudaDeviceSynchronize());
 
 	Utilities::getError(cudaFree(d_lut));
 
@@ -458,31 +470,23 @@ void histogramEqualization(
 
 void calculateHistogram(uint* const input, uint* const d_Histogram, int rows, int cols )
 {
-	const char* func = "calculateHistogram";
-
-	cudaError hr = cudaSuccess;
-
 	initHistogram();
-	histogram(d_Histogram, input, rows*cols*sizeof(uchar));
-	hr = cudaDeviceSynchronize();
-	CHECK_CUDA_ERROR(hr, func, "histogram kernel failed.");
+	histogram(d_Histogram, input, rows*cols*sizeof(uint));
+	Utilities::getError(cudaDeviceSynchronize());
 	closeHistogram();
 }
 
-void generateLUT(uint* const lut, 
-				 const uint* const hist,
+void generateLUTCpu(uint* const lut, 
+				 const int* const h_hist,
 				 uint* const cdf, 
 				 int levels, int nPixels)
 {
-	const char* func = "generateLUT";
-
-	cudaError hr = cudaSuccess;
 	size_t size = HISTOGRAM_BIN_COUNT*sizeof(uint);
 	uint* h_cdf = (uint*)malloc(size);
-	uint* h_hist = (uint*)malloc(size);
+	//uint* h_hist = (uint*)malloc(size);
 	
-	Utilities::getError(cudaMemcpy(h_hist, hist, size, cudaMemcpyDeviceToHost));
-	Utilities::getError(cudaDeviceSynchronize());
+	//Utilities::getError(cudaMemcpy(h_hist, hist, size, cudaMemcpyDeviceToHost));
+	//Utilities::getError(cudaDeviceSynchronize());
 	
 	h_cdf[0] = h_hist[0];
 	//lut[0] = 0;
@@ -492,18 +496,52 @@ void generateLUT(uint* const lut,
 	}
 	
 	Utilities::getError(cudaMemcpy(cdf, h_cdf, size, cudaMemcpyHostToDevice));
+	int block_size = 32;
+	int grid_size = ((HISTOGRAM_BIN_COUNT - 1) / block_size + 1);
 
-	int block = 32;
-	int grid = ((HISTOGRAM_BIN_COUNT-1) / block + 1);
+	const dim3 block(block_size, 1, 1);			// block width: number of threads per block
+	const dim3 grid(grid_size, 1, 1);			// number of blocks
 	
 	generate_LUT << <grid, block >> >(lut, cdf, HISTOGRAM_BIN_COUNT, nPixels);
 	Utilities::getError(cudaDeviceSynchronize());
-	//hr = cudaDeviceSynchronize();
-	//CHECK_CUDA_ERROR(hr, func, "generate_LUT kernel failed.");
 	
+	free(h_cdf);
+	//free(h_hist);
+}
+
+void generateLUT(uint* const lut,
+	const uint* const hist,
+	uint* const cdf,
+	int levels, int nPixels)
+{
+	size_t size = HISTOGRAM_BIN_COUNT*sizeof(uint);
+	uint* h_cdf = (uint*)malloc(size);
+	uint* h_hist = (uint*)malloc(size);
+
+	Utilities::getError(cudaMemcpy(h_hist, hist, size, cudaMemcpyDeviceToHost));
+	Utilities::getError(cudaDeviceSynchronize());
+
+	h_cdf[0] = h_hist[0];
+	//lut[0] = 0;
+	for (int i = 1; i < HISTOGRAM_BIN_COUNT; i++)
+	{
+		h_cdf[i] = h_cdf[i - 1] + h_hist[i];
+	}
+
+	Utilities::getError(cudaMemcpy(cdf, h_cdf, size, cudaMemcpyHostToDevice));
+	int block_size = 32;
+	int grid_size = ((HISTOGRAM_BIN_COUNT - 1) / block_size + 1);
+
+	const dim3 block(block_size, 1, 1);			// block width: number of threads per block
+	const dim3 grid(grid_size, 1, 1);			// number of blocks
+
+	generate_LUT << <grid, block >> >(lut, cdf, HISTOGRAM_BIN_COUNT, nPixels);
+	Utilities::getError(cudaDeviceSynchronize());
+
 	free(h_cdf);
 	free(h_hist);
 }
+
 
 __global__
 void convert_to_uint(const uchar* const input, uint* const output, int rows, int cols)
@@ -525,7 +563,7 @@ void generate_LUT(uint* const lut, const uint* const cdf, int levels, int nPixel
 
 	if (i >= levels)
 		return;
-
+	
 	lut[i] = round((cdf[i] - cdf[0])*(levels - 1) / (double)(nPixels - cdf[0]));
 }
 
@@ -543,4 +581,17 @@ void equalize_channel(const uchar* const input,
 	}
 	int idx = y + cols * x;		// current pixel index
 	output[idx] = lut[input[idx]];
+}
+
+void calculateHistogramCPU(const uchar* const input, int* const histogram, int rows,int cols)
+{
+	for (int i = 0; i < HISTOGRAM_BIN_COUNT; i++)
+	{
+		histogram[i]=0;
+	}
+	int size = rows*cols;
+	for (int i = 0; i < size; i++)
+	{
+		histogram[input[i]]++;
+	}
 }
